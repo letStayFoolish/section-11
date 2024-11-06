@@ -7,19 +7,35 @@ import Places from "./components/Places.tsx";
 import { ModalRef, PlaceType } from "./types";
 import { sortPlacesByDistance } from "./loc.ts";
 
+const storedIds = JSON.parse(localStorage.getItem("selectedPlaces"));
+const storedPlaces = storedIds.map((id) =>
+  AVAILABLE_PLACES.find((place) => place.id === id),
+);
+
 function App() {
   const modalRef = useRef<ModalRef>(null);
   const selectedPlaceRef = useRef<string>(null);
   const [availableStates, setAvailableStates] = useState<PlaceType[]>([]);
 
-  const [pickedPlaces, setPickedPlaces] = useState<PlaceType[]>([]);
+  const [pickedPlaces, setPickedPlaces] = useState<PlaceType[]>(storedPlaces);
+
+  // An example of redundant useEffect - useEffect not needed
+  // useEffect(() => {
+  //   const storedIds = JSON.parse(localStorage.getItem("selectedPlaces"));
+  //
+  //   if (!storedIds) return;
+  //
+  //   const storedPlaces = storedIds.map((id) =>
+  //     AVAILABLE_PLACES.find((place) => place.id === id),
+  //   );
+  //   setPickedPlaces(storedPlaces);
+  // }, []);
 
   /**
    * useEffect:
    *
    * code inside useEffect will be executed only after the function component execution.
    * */
-
   useEffect(() => {
     navigator.geolocation.getCurrentPosition((position) => {
       const sortedPlaces = sortPlacesByDistance(
@@ -53,6 +69,18 @@ function App() {
       }
       return prevPickedPlaces;
     });
+
+    // Another example of an a side effect code:
+    const storedIds = JSON.parse(localStorage.getItem("selectedPlaces")) || [];
+
+    // storedIds.indexOf(id) === -1 means that this id is not stored in storedIds
+    // need localStorage functionality to persist places picked by the user...
+    if (storedIds.indexOf(id) === -1) {
+      localStorage.setItem(
+        "selectedPlaces",
+        JSON.stringify([id, ...storedIds]),
+      );
+    }
   }
 
   function handleRemovePlace() {
@@ -60,6 +88,13 @@ function App() {
       prevPickedPlaces.filter((place) => place.id !== selectedPlaceRef.current),
     );
     modalRef?.current?.close();
+
+    const storedIds = JSON.parse(localStorage.getItem("selectedPlaces")) || [];
+
+    localStorage.setItem(
+      "selectedPlaces",
+      JSON.stringify(storedIds.filter((id) => id !== selectedPlaceRef.current)),
+    );
   }
 
   return (
