@@ -4,7 +4,7 @@ import type { PlaceType } from "../types";
 type Props = {
   title: string;
   places: PlaceType[];
-  fallbackText?: string;
+  fallbackText: string;
   onSelectPlace: (id: string) => void;
 };
 

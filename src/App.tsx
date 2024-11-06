@@ -1,15 +1,36 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import logoImg from "./assets/logo.png";
 import { AVAILABLE_PLACES } from "./data.ts";
 import Modal from "./components/Modal.tsx";
 import DeleteConfirmation from "./components/DeleteConfirmation.tsx";
 import Places from "./components/Places.tsx";
 import { ModalRef, PlaceType } from "./types";
+import { sortPlacesByDistance } from "./loc.ts";
 
 function App() {
   const modalRef = useRef<ModalRef>(null);
   const selectedPlaceRef = useRef<string>(null);
+  const [availableStates, setAvailableStates] = useState<PlaceType[]>([]);
+
   const [pickedPlaces, setPickedPlaces] = useState<PlaceType[]>([]);
+
+  /**
+   * useEffect:
+   *
+   * code inside useEffect will be executed only after the function component execution.
+   * */
+
+  useEffect(() => {
+    navigator.geolocation.getCurrentPosition((position) => {
+      const sortedPlaces = sortPlacesByDistance(
+        AVAILABLE_PLACES,
+        position.coords.latitude,
+        position.coords.longitude,
+      );
+
+      setAvailableStates(sortedPlaces);
+    });
+  }, []);
 
   function handleStartRemovePlace(id: string) {
     modalRef?.current?.open();
@@ -26,7 +47,11 @@ function App() {
         return prevPickedPlaces;
       }
       const place = AVAILABLE_PLACES.find((place) => place.id === id);
-      return [place, ...prevPickedPlaces];
+
+      if (place) {
+        return [place, ...prevPickedPlaces];
+      }
+      return prevPickedPlaces;
     });
   }
 
@@ -63,8 +88,9 @@ function App() {
         />
         <Places
           title="Available Places"
-          places={AVAILABLE_PLACES}
+          places={availableStates}
           onSelectPlace={handleSelectPlace}
+          fallbackText={"Sorting places by distance..."}
         />
       </main>
     </>
