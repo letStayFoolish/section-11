@@ -14,6 +14,8 @@ const Places: React.FC<Props> = ({
   fallbackText,
   onSelectPlace,
 }) => {
+  if (!places) return;
+
   return (
     <section className="places-category">
       <h2>{title}</h2>

@@ -7,10 +7,12 @@ import React, {
 import { createPortal } from "react-dom";
 import { ModalRef, ModalRefMethods } from "../types";
 
-const ModalWithRef: React.ForwardRefRenderFunction<
-  ModalRefMethods,
-  PropsWithChildren
-> = ({ children }, ref) => {
+type Props = PropsWithChildren & { isOpen: boolean };
+
+const ModalWithRef: React.ForwardRefRenderFunction<ModalRefMethods, Props> = (
+  { children, isOpen },
+  ref,
+) => {
   const dialogRef = useRef<ModalRef>(null);
 
   useImperativeHandle(ref, () => {
@@ -26,7 +28,7 @@ const ModalWithRef: React.ForwardRefRenderFunction<
 
   return createPortal(
     <dialog className="modal" ref={dialogRef}>
-      {children}
+      {isOpen ? children : null}
     </dialog>,
     document.getElementById("modal")!,
   );

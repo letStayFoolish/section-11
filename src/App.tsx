@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import logoImg from "./assets/logo.png";
 import { AVAILABLE_PLACES } from "./data.ts";
 import Modal from "./components/Modal.tsx";
@@ -8,15 +8,24 @@ import { ModalRef, PlaceType } from "./types";
 import { sortPlacesByDistance } from "./loc.ts";
 
 const storedIds = JSON.parse(localStorage.getItem("selectedPlaces"));
-const storedPlaces = storedIds.map((id) =>
+const storedPlaces: PlaceType[] = storedIds?.map((id: string) =>
   AVAILABLE_PLACES.find((place) => place.id === id),
 );
 
 function App() {
+  console.count("App");
+  /**
+   * App component should be (re)executed 2 times (without StrictMode).
+   *
+   * (1) First time because an App component is initially loaded with `availableStates` as an empty array.
+   * In the background, we're fetching and setting available states using `setPickedPlaces`.
+   * (2) After available states are fetched and set, the App component shall be re-executed again, because of local state got updated.
+   * */
+
   const modalRef = useRef<ModalRef>(null);
   const selectedPlaceRef = useRef<string>(null);
   const [availableStates, setAvailableStates] = useState<PlaceType[]>([]);
-
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [pickedPlaces, setPickedPlaces] = useState<PlaceType[]>(storedPlaces);
 
   // An example of redundant useEffect - useEffect not needed
@@ -51,6 +60,7 @@ function App() {
   function handleStartRemovePlace(id: string) {
     modalRef?.current?.open();
     selectedPlaceRef.current = id;
+    setIsModalOpen(true);
   }
 
   function handleStopRemovePlace() {
@@ -83,11 +93,15 @@ function App() {
     }
   }
 
-  function handleRemovePlace() {
+  /**
+   * We should use `useCallback` React hook, when passing function as a dependency to `useEffect`!!!
+   */
+  const handleRemovePlace = useCallback(function handleRemovePlace() {
     setPickedPlaces((prevPickedPlaces) =>
       prevPickedPlaces.filter((place) => place.id !== selectedPlaceRef.current),
     );
     modalRef?.current?.close();
+    setIsModalOpen(false);
 
     const storedIds = JSON.parse(localStorage.getItem("selectedPlaces")) || [];
 
@@ -95,11 +109,11 @@ function App() {
       "selectedPlaces",
       JSON.stringify(storedIds.filter((id) => id !== selectedPlaceRef.current)),
     );
-  }
+  }, []);
 
   return (
     <>
-      <Modal ref={modalRef}>
+      <Modal ref={modalRef} isOpen={isModalOpen}>
         <DeleteConfirmation
           onCancel={handleStopRemovePlace}
           onConfirm={handleRemovePlace}
