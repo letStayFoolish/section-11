@@ -6,6 +6,7 @@ import DeleteConfirmation from "./components/DeleteConfirmation.tsx";
 import Places from "./components/Places.tsx";
 import { ModalRef, PlaceType } from "./types";
 import { sortPlacesByDistance } from "./loc.ts";
+import AvailablePlaces from "./components/AvailablePlaces.tsx";
 
 const storedIds = JSON.parse(localStorage.getItem("selectedPlaces"));
 const storedPlaces: PlaceType[] = storedIds?.map((id: string) =>
@@ -24,7 +25,6 @@ function App() {
 
   const modalRef = useRef<ModalRef>(null);
   const selectedPlaceRef = useRef<string>(null);
-  const [availableStates, setAvailableStates] = useState<PlaceType[]>([]);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [pickedPlaces, setPickedPlaces] = useState<PlaceType[]>(storedPlaces);
 
@@ -52,8 +52,6 @@ function App() {
         position.coords.latitude,
         position.coords.longitude,
       );
-
-      setAvailableStates(sortedPlaces);
     });
   }, []);
 
@@ -135,12 +133,7 @@ function App() {
           places={pickedPlaces}
           onSelectPlace={handleStartRemovePlace}
         />
-        <Places
-          title="Available Places"
-          places={availableStates}
-          onSelectPlace={handleSelectPlace}
-          fallbackText={"Sorting places by distance..."}
-        />
+        <AvailablePlaces handleOnSelect={handleSelectPlace} />
       </main>
     </>
   );
