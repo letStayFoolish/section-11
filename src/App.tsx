@@ -45,15 +45,6 @@ function App() {
    *
    * code inside useEffect will be executed only after the function component execution.
    * */
-  useEffect(() => {
-    navigator.geolocation.getCurrentPosition((position) => {
-      const sortedPlaces = sortPlacesByDistance(
-        AVAILABLE_PLACES,
-        position.coords.latitude,
-        position.coords.longitude,
-      );
-    });
-  }, []);
 
   function handleStartRemovePlace(id: string) {
     modalRef?.current?.open();
