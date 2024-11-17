@@ -4,6 +4,7 @@ import { GET_PLACES_API } from "../config";
 import ErrorPage from "./Error.tsx";
 import { sortPlacesByDistance } from "../loc.ts";
 import { PlaceType } from "../types";
+import { fetchAvailablePLaces } from "../api.ts";
 
 type Props = {
   handleOnSelect: (id: string) => void;
@@ -19,19 +20,12 @@ const AvailablePlaces: React.FC<Props> = ({ handleOnSelect }) => {
       setPending(true);
       setError({ message: "" });
       try {
-        const response = await fetch(GET_PLACES_API);
-        const resData = await response.json();
-
-        if (!response.ok) {
-          // set Error message
-          throw new Error("Failed to fetch places.");
-        }
-
+        const fetchedAvailablePLaces = await fetchAvailablePLaces();
         navigator.geolocation.getCurrentPosition((position) => {
           const { latitude, longitude } = position.coords;
 
           const sortedPlaces = sortPlacesByDistance(
-            resData.places,
+            fetchedAvailablePLaces,
             latitude,
             longitude,
           );
