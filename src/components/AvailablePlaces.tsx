@@ -10,14 +10,16 @@ const AvailablePlaces: React.FC<Props> = ({ handleOnSelect }) => {
   const [availablePlaces, setAvailablePlaces] = useState([]);
 
   useEffect(() => {
-    fetch(GET_PLACES_API)
-      .then((response) => {
-        return response.json();
-      })
-      .then((resData) => {
+    void (async () => {
+      try {
+        const response = await fetch(GET_PLACES_API);
+
+        const resData = await response.json();
         setAvailablePlaces(resData.places);
-      })
-      .catch((err) => console.error(err));
+      } catch (error: any) {
+        console.error(error);
+      }
+    })();
   }, []);
 
   console.log({ availablePlaces });
