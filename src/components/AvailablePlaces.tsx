@@ -8,9 +8,11 @@ type Props = {
 
 const AvailablePlaces: React.FC<Props> = ({ handleOnSelect }) => {
   const [availablePlaces, setAvailablePlaces] = useState([]);
+  const [pending, setPending] = useState(true);
 
   useEffect(() => {
     void (async () => {
+      setPending(true);
       try {
         const response = await fetch(GET_PLACES_API);
 
@@ -18,11 +20,11 @@ const AvailablePlaces: React.FC<Props> = ({ handleOnSelect }) => {
         setAvailablePlaces(resData.places);
       } catch (error: any) {
         console.error(error);
+      } finally {
+        setPending(false);
       }
     })();
   }, []);
-
-  console.log({ availablePlaces });
 
   return (
     <Places
@@ -30,6 +32,8 @@ const AvailablePlaces: React.FC<Props> = ({ handleOnSelect }) => {
       places={availablePlaces}
       onSelectPlace={handleOnSelect}
       fallbackText={"Sorting places by distance..."}
+      isLoading={pending}
+      loadingText={"Loading available places..."}
     />
   );
 };
