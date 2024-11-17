@@ -1,17 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import logoImg from "./assets/logo.png";
-import { AVAILABLE_PLACES } from "./data.ts";
 import Modal from "./components/Modal.tsx";
 import DeleteConfirmation from "./components/DeleteConfirmation.tsx";
 import Places from "./components/Places.tsx";
 import { ModalRef, PlaceType } from "./types";
-import { sortPlacesByDistance } from "./loc.ts";
 import AvailablePlaces from "./components/AvailablePlaces.tsx";
-
-const storedIds = JSON.parse(localStorage.getItem("selectedPlaces"));
-const storedPlaces: PlaceType[] = storedIds?.map((id: string) =>
-  AVAILABLE_PLACES.find((place) => place.id === id),
-);
+import { updateUsersPlaces } from "./api.ts";
 
 function App() {
   console.count("App");
@@ -25,20 +19,9 @@ function App() {
 
   const modalRef = useRef<ModalRef>(null);
   const selectedPlaceRef = useRef<string>(null);
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [pickedPlaces, setPickedPlaces] = useState<PlaceType[]>(storedPlaces);
 
-  // An example of redundant useEffect - useEffect not needed
-  // useEffect(() => {
-  //   const storedIds = JSON.parse(localStorage.getItem("selectedPlaces"));
-  //
-  //   if (!storedIds) return;
-  //
-  //   const storedPlaces = storedIds.map((id) =>
-  //     AVAILABLE_PLACES.find((place) => place.id === id),
-  //   );
-  //   setPickedPlaces(storedPlaces);
-  // }, []);
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [userPlaces, setUserPlaces] = useState<PlaceType[]>([]);
 
   /**
    * useEffect:
@@ -46,59 +29,40 @@ function App() {
    * code inside useEffect will be executed only after the function component execution.
    * */
 
-  function handleStartRemovePlace(id: string) {
+  function handleStartRemovePlace(place: PlaceType) {
     modalRef?.current?.open();
-    selectedPlaceRef.current = id;
+    selectedPlaceRef.current = place.id;
     setIsModalOpen(true);
   }
 
   function handleStopRemovePlace() {
-    modalRef?.current?.close();
+    setIsModalOpen(false);
   }
 
-  function handleSelectPlace(id: string) {
-    setPickedPlaces((prevPickedPlaces) => {
-      if (prevPickedPlaces.some((place) => place.id === id)) {
+  async function handleSelectPlace(selectedPlace: PlaceType) {
+    setUserPlaces((prevPickedPlaces) => {
+      if (!prevPickedPlaces || prevPickedPlaces.length === 0) {
+        prevPickedPlaces = [];
+      }
+
+      if (prevPickedPlaces.some((place) => place.id === selectedPlace.id)) {
         return prevPickedPlaces;
       }
-      const place = AVAILABLE_PLACES.find((place) => place.id === id);
 
-      if (place) {
-        return [place, ...prevPickedPlaces];
-      }
-      return prevPickedPlaces;
+      return [selectedPlace, ...prevPickedPlaces];
     });
 
-    // Another example of an a side effect code:
-    const storedIds = JSON.parse(localStorage.getItem("selectedPlaces")) || [];
-
-    // storedIds.indexOf(id) === -1 means that this id is not stored in storedIds
-    // need localStorage functionality to persist places picked by the user...
-    if (storedIds.indexOf(id) === -1) {
-      localStorage.setItem(
-        "selectedPlaces",
-        JSON.stringify([id, ...storedIds]),
-      );
+    try {
+      await updateUsersPlaces([selectedPlace, ...userPlaces]);
+    } catch (error: any) {
+      console.error(error);
     }
   }
 
   /**
    * We should use `useCallback` React hook, when passing function as a dependency to `useEffect`!!!
    */
-  const handleRemovePlace = useCallback(function handleRemovePlace() {
-    setPickedPlaces((prevPickedPlaces) =>
-      prevPickedPlaces.filter((place) => place.id !== selectedPlaceRef.current),
-    );
-    modalRef?.current?.close();
-    setIsModalOpen(false);
-
-    const storedIds = JSON.parse(localStorage.getItem("selectedPlaces")) || [];
-
-    localStorage.setItem(
-      "selectedPlaces",
-      JSON.stringify(storedIds.filter((id) => id !== selectedPlaceRef.current)),
-    );
-  }, []);
+  const handleRemovePlace = useCallback(function handleRemovePlace() {}, []);
 
   return (
     <>
@@ -121,8 +85,10 @@ function App() {
         <Places
           title="I'd like to visit ..."
           fallbackText={"Select the places you would like to visit below."}
-          places={pickedPlaces}
+          places={userPlaces}
           onSelectPlace={handleStartRemovePlace}
+          isLoading={false}
+          loadingText={"Loading places..."}
         />
         <AvailablePlaces handleOnSelect={handleSelectPlace} />
       </main>

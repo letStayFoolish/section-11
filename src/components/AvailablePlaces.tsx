@@ -1,13 +1,12 @@
 import React, { useEffect, useState } from "react";
 import Places from "./Places.tsx";
-import { GET_PLACES_API } from "../config";
 import ErrorPage from "./Error.tsx";
 import { sortPlacesByDistance } from "../loc.ts";
 import { PlaceType } from "../types";
 import { fetchAvailablePLaces } from "../api.ts";
 
 type Props = {
-  handleOnSelect: (id: string) => void;
+  handleOnSelect: (place: PlaceType) => void;
 };
 
 const AvailablePlaces: React.FC<Props> = ({ handleOnSelect }) => {

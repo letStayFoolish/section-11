@@ -6,7 +6,7 @@ type Props = {
   title: string;
   places: PlaceType[];
   fallbackText: string;
-  onSelectPlace: (id: string) => void;
+  onSelectPlace: (place: PlaceType) => void;
   isLoading: boolean;
   loadingText: string;
 };
@@ -32,7 +32,7 @@ const Places: React.FC<Props> = ({
         <ul className="places">
           {places.map((place) => (
             <li key={place.id} className="place-item">
-              <button onClick={() => onSelectPlace(place.id)}>
+              <button onClick={() => onSelectPlace(place)}>
                 <img
                   src={`${BASE_URL}/${place.image.src}`}
                   alt={place.image.alt}
