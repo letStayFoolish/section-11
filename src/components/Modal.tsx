@@ -26,6 +26,8 @@ const ModalWithRef: React.ForwardRefRenderFunction<ModalRefMethods, Props> = (
     };
   });
 
+  console.log({ isOpen });
+
   return createPortal(
     <dialog className="modal" ref={dialogRef}>
       {isOpen ? children : null}

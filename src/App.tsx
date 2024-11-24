@@ -6,9 +6,10 @@ import Places from "./components/Places.tsx";
 import { ModalRef, PlaceType } from "./types";
 import AvailablePlaces from "./components/AvailablePlaces.tsx";
 import { updateUsersPlaces } from "./api.ts";
-
+import ErrorPage from "./components/Error.tsx";
 function App() {
   console.count("App");
+  console.log("After I have add to shelv");
   /**
    * App component should be (re)executed 2 times (without StrictMode).
    *
@@ -22,6 +23,9 @@ function App() {
 
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [userPlaces, setUserPlaces] = useState<PlaceType[]>([]);
+  const [errorUpdatingPlaces, setErrorUpdatingPlaces] = useState({
+    message: "",
+  });
 
   /**
    * useEffect:
@@ -56,6 +60,8 @@ function App() {
       await updateUsersPlaces([selectedPlace, ...userPlaces]);
     } catch (error: any) {
       console.error(error);
+      setUserPlaces(userPlaces);
+      setErrorUpdatingPlaces(error || { message: "Failed to update places." });
     }
   }
 
@@ -64,8 +70,22 @@ function App() {
    */
   const handleRemovePlace = useCallback(function handleRemovePlace() {}, []);
 
+  const handleError = () => {
+    setErrorUpdatingPlaces({ message: "" });
+  };
+
   return (
     <>
+      <Modal isOpen={errorUpdatingPlaces.message !== ""} ref={modalRef}>
+        {errorUpdatingPlaces.message !== "" && (
+          <ErrorPage
+            title="Error"
+            message={errorUpdatingPlaces?.message || "Something went wrong"}
+            onConfirm={handleError}
+          />
+        )}
+      </Modal>
+
       <Modal ref={modalRef} isOpen={isModalOpen}>
         <DeleteConfirmation
           onCancel={handleStopRemovePlace}
